@@ -1,0 +1,9 @@
+History.txt
+Manifest.txt
+README.txt
+Rakefile
+lib/labjack.rb
+lib/labjack_ffi.rb
+lib/labjack_structs.rb
+src/LJ.i
+test/test_labjack.rb
