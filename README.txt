@@ -1,12 +1,14 @@
-= labjack
+= labjack-ffi
 
-* http://github.com/bikenomad/
+* http://github.com/bikenomad/labjack-ffi
 
 == DESCRIPTION:
 
-FFI-based interface to LabJack (http://www.labjack.com/) data acquisition devices.
+FFI-based Ruby interface to LabJack (http://www.labjack.com/) data acquisition devices.
 
 == FEATURES/PROBLEMS:
+
+* Incomplete (initial version)
 
 == SYNOPSIS:
 
@@ -18,6 +20,8 @@ FFI-based interface to LabJack (http://www.labjack.com/) data acquisition device
 * hoe gem (for installation)
 
 == INSTALL:
+
+gem install labjack-ffi
 
 == LICENSE:
 
