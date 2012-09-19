@@ -1,76 +1,164 @@
 require 'labjack_ffi'
 
+# fix for over-flattening in nice-ffi
+class NiceFFI::Struct
+  def to_hash
+    return {} if members.empty?
+    Hash[ *(members.collect{ |m| [m, self[m]] }.flatten!(1)) ]
+  end
+end
+
+class String
+  def hexdump
+    self.unpack("H*")[0].gsub(/../, "\\0 ")
+  end
+end
+
 module LJ_FFI
   extend NiceFFI::Library
-  load_library 'labjackusb'
+  load_library('labjackusb')
 
-  class NormalCommand < NiceFFI::Struct
-    def dumpCommand
-      a = []
-      (self.members - [:dataWords]).each { |m| a << ('%s: %02x' % [m, self[m]]) }
-      aa = [ "dataWords: [" ]
-      self[:dataWords].each { |d| aa << ('%02x' % d) }
-      aa << "]"
-      a << aa.join(' ')
-      a.join(', ')
-    end
-
-    def initialize
-      super
-      order(:little)
-    end
-  end
-
-  class ExtendedCommand < NiceFFI::Struct
-    def dumpCommand
-      a = []
-      (self.members - [:dataWords]).each { |m| a << ('%s: %02x' % [m, self[m]]) }
-      aa = [ "dataWords: [" ]
-      self[:numberOfDataWords].times { |i| aa << ('%02x' % self[:dataWords][i]) }
-      aa << "]"
-      a << aa.join(' ')
-      a.join(', ')
-    end
-
-    def initialize(*args)
-      super(*args)
-      order(:little)
-    end
-  end
-
-  class ConfigU3Args < NiceFFI::Struct
+  class CommandHeader < NiceFFI::Struct
     pack(1)
-    layout(
-      :writeMask, :uint16,
-      :localID, :uint8,
-      :timerCounterConfig, :uint8,
-      :fioAnalog, :uint8,
-      :fioDirection, :uint8,
-      :fioStat, :uint8,
-      :eioAnalog, :uint8,
-      :eioDirection, :uint8,
-      :eioStat, :uint8,
-      :cioDirection, :uint8,
-      :cioState, :uint8,
-      :dac1Enable, :uint8,
-      :dac0, :uint8,
-      :dac1, :uint8,
-      :timerClockConfig, :uint8,
-      :timerClockDivisor, :uint8,
-      :compatibilityOptions, :uint8,
-      :reserved, :uint16
-    )
+    def initialize(*args)
+      super(*args)
+      order(:little)
+    end
+  end
+
+  class NormalCommandHeader < CommandHeader
+    layout(:checksum8, :uint8, :commandByte, :uint8)
+  end
+
+  # cmdNumber 0..14
+  # dataWords 0 to 7 data words
+  #
+  # byte
+  # 0 Checksum8: Includes bytes 1-15.
+  # 1 Command Byte: DCCCCWWW
+  #   Bit 7: Destination bit: 0 = Local, 1 = Remote.
+  #   Bits 6-3: Normal command number (0-14).
+  #   Bits 2-0: Number of data words.
+  # 2-15 Data Words.
+  # subclasses should have a NormalCommandHeader member called :header at offset 0.
+  class NormalCommand < NiceFFI::Struct
+    pack(1)
 
     def initialize(*args)
       super(*args)
       order(:little)
+      self.clear
+    end
+
+    # 15 bytes max; sum is 15*255=3825 max
+    # return value here is 256 maximum
+    def cs8
+      s = self.to_bytes.byteslice(1, self.size-1).sum
+      a = s.divmod(256)
+      a[0] + a[1]
+    end
+
+    # assumes all other fields are set up already
+    def format(cmdNumber, isLocal=true)
+      header.commandByte = (isLocal ? 0 : 0x80) | (cmdNumber << 3) | (self.size - header.size)
+      header.checksum8 = self.cs8
+    end
+  end
+
+  class ExtendedCommandHeader < CommandHeader
+    layout(
+           :checksum8, :uint8,
+           :commandByte, :uint8,
+           :numberOfDataWords, :uint8,
+           :commandNumber, :uint8,
+           :checksum16LSB, :uint8,
+           :checksum16MSB, :uint8
+    )
+  end
+
+  # subclasses should have an ExtendedCommandHeader member called :header at offset 0.
+  # Byte
+  # 0 Checksum8: Includes bytes 1-5.
+  # 1 Command Byte: D111_1WWW
+  #   Bit 7: Destination bit: 0 = Local, 1 = Remote.
+  #   Bits 6-3: 1111 specifies that this is an extended Command.
+  #   Bits 2-0: Used with some commands.
+  # 2 Number of data words
+  # 3 Extended command number.
+  # 4 Checksum16 (LSB)
+  # 5 Checksum16 (MSB)
+  # 6-255 Data words.
+  class ExtendedCommand < NiceFFI::Struct
+    pack(1)
+
+    def initialize(*args)
+      super(*args)
+      order(:little)
+      self.clear
+    end
+
+    # checksum8 of bytes 1-5 (header)
+    def cs8 
+      s = self.to_bytes.byteslice(1, 5).sum
+      a = s.divmod(256)
+      a[0] + a[1]
+    end
+
+    # 250 bytes max; sum is 250*255=63750 max
+    # returns [lsb, msb]
+    def cs16
+      s = self.to_bytes.byteslice(6, self.size-6).sum
+      a = s.divmod(256)
+      a.reverse
+    end
+
+    def command_code
+      raise "no command code defined for #{self.class}"
+    end
+
+    def response_class
+      raise "no response class defined for #{self.class}"
+    end
+
+    # assumes all other fields are set up already
+    def format(extraBits=0, isLocal=true)
+      header.commandByte = (isLocal ? 0 : 0x80) | (0x0F << 3) | (extraBits & 0x07)
+      header.numberOfDataWords = self.size - 6
+      header.commandNumber = self.command_code
+      header.checksum16LSB = 0
+      header.checksum16MSB = 0
+      c16 = self.cs16
+      header.checksum16LSB = c16[0]
+      header.checksum16MSB = c16[1]
+      header.checksum8 = self.cs8
+    end
+
+    def do_command(handle, respbuf, extraBits=0, isLocal=false)
+      self.format(extraBits, isLocal)
+puts "Sent: #{self.to_hash.inspect}"
+puts self.to_bytes.byteslice(0, self.size).hexdump
+      # send command
+      sent = LJ_FFI::ljusb_write(handle, self.to_ptr, self.size)
+      raise "write failed" if sent != self.size
+      # get response
+      response = response_class.new(respbuf)
+      received = LJ_FFI::ljusb_read(handle, response.to_ptr, response.size)
+      case received
+      when 0
+        raise "read failed"
+      when 2
+        raise "bad checksum" if response.to_bytes == "\xB8\xB8"
+      else
+        raise "unexpected response: #{response.to_bytes.inspect}" unless received == response.size
+      end
+      response
     end
   end
 
   class ConfigU3Response < NiceFFI::Struct
     pack(1)
     layout(
-      :origCmd, [:uint8, 6],  # bytes 0-5
+      :origCmd, ExtendedCommandHeader,  # bytes 0-5
       :errorcode, :uint8,
       :reserved, [ :uint8, 2],
       :firmwareVersion, :uint16,
@@ -97,4 +185,33 @@ module LJ_FFI
       :versionInfo, :uint8
     )
   end
+
+  class ConfigU3Command < ExtendedCommand
+    def command_code; 8; end
+    def response_class; ConfigU3Response; end
+    pack(1)
+    layout(
+      :header, ExtendedCommandHeader,
+      :writeMask, :uint16,
+      :localID, :uint8,
+      :timerCounterConfig, :uint8,
+      :fioAnalog, :uint8,
+      :fioDirection, :uint8,
+      :fioStat, :uint8,
+      :eioAnalog, :uint8,
+      :eioDirection, :uint8,
+      :eioStat, :uint8,
+      :cioDirection, :uint8,
+      :cioState, :uint8,
+      :dac1Enable, :uint8,
+      :dac0, :uint8,
+      :dac1, :uint8,
+      :timerClockConfig, :uint8,
+      :timerClockDivisor, :uint8,
+      :compatibilityOptions, :uint8,
+      :reserved, :uint16
+    )
+
+  end
+
 end
