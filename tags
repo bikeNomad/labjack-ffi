@@ -1,0 +1,42 @@
+!_TAG_FILE_FORMAT	2	/extended format; --format=1 will not append ;" to lines/
+!_TAG_FILE_SORTED	1	/0=unsorted, 1=sorted, 2=foldcase/
+!_TAG_PROGRAM_AUTHOR	Darren Hiebert	/dhiebert@users.sourceforge.net/
+!_TAG_PROGRAM_NAME	Exuberant Ctags	//
+!_TAG_PROGRAM_URL	http://ctags.sourceforge.net	/official site/
+!_TAG_PROGRAM_VERSION	5.8	//
+Command	lib/labjack_structs.rb	/^  class Command < NiceFFI::Struct$/;"	c	class:LJ_FFI
+CommandHeader	lib/labjack_structs.rb	/^  class CommandHeader < NiceFFI::Struct$/;"	c	class:LJ_FFI
+ConfigU3Command	lib/labjack_structs.rb	/^  class ConfigU3Command < ExtendedCommand$/;"	c	class:LJ_FFI
+ConfigU3Response	lib/labjack_structs.rb	/^  class ConfigU3Response < NiceFFI::Struct$/;"	c	class:LJ_FFI
+ExtendedCommand	lib/labjack_structs.rb	/^  class ExtendedCommand < Command$/;"	c	class:LJ_FFI
+ExtendedCommandHeader	lib/labjack_structs.rb	/^  class ExtendedCommandHeader < CommandHeader$/;"	c	class:LJ_FFI
+LJDevice	lib/labjack.rb	/^class LJDevice$/;"	c
+LJ_FFI	lib/labjack_ffi.rb	/^module LJ_FFI$/;"	m
+LJ_FFI	lib/labjack_structs.rb	/^module LJ_FFI$/;"	m
+LibC	lib/labjack_ffi.rb	/^module LibC$/;"	m
+NiceFFI	lib/labjack_structs.rb	/^class NiceFFI::Struct$/;"	c
+NormalCommand	lib/labjack_structs.rb	/^  class NormalCommand < Command$/;"	c	class:LJ_FFI
+NormalCommandHeader	lib/labjack_structs.rb	/^  class NormalCommandHeader < CommandHeader$/;"	c	class:LJ_FFI
+String	lib/labjack_structs.rb	/^class String$/;"	c
+command_code	lib/labjack_structs.rb	/^    def command_code$/;"	f	class:LJ_FFI.Command
+command_code	lib/labjack_structs.rb	/^    def command_code; 8; end$/;"	f	class:LJ_FFI.ConfigU3Command
+configU3	lib/labjack.rb	/^  def configU3$/;"	f	class:LJDevice
+cs16	lib/labjack_structs.rb	/^    def cs16$/;"	f	class:LJ_FFI.ExtendedCommand
+cs8	lib/labjack_structs.rb	/^    def cs8 $/;"	f	class:LJ_FFI.ExtendedCommand
+cs8	lib/labjack_structs.rb	/^    def cs8$/;"	f	class:LJ_FFI.NormalCommand
+do_command	lib/labjack_structs.rb	/^    def do_command(handle, respbuf, extraBits=0, isLocal=true)$/;"	f	class:LJ_FFI.ExtendedCommand
+format	lib/labjack_structs.rb	/^    def format(cmdNumber, isLocal=true)$/;"	f	class:LJ_FFI.NormalCommand
+format	lib/labjack_structs.rb	/^    def format(extraBits=0, isLocal=true)$/;"	f	class:LJ_FFI.ExtendedCommand
+hexdump	lib/labjack_structs.rb	/^  def hexdump$/;"	f	class:String
+initialize	lib/labjack.rb	/^  def initialize(devnum, prod_id)$/;"	f
+initialize	lib/labjack_structs.rb	/^    def initialize(*args)$/;"	f	class:LJ_FFI.Command
+initialize	lib/labjack_structs.rb	/^    def initialize(*args)$/;"	f	class:LJ_FFI.CommandHeader
+num_data_words	lib/labjack_structs.rb	/^    def num_data_words$/;"	f	class:LJ_FFI.Command
+receive_size	lib/labjack_structs.rb	/^    def receive_size$/;"	f	class:LJ_FFI.Command
+response_class	lib/labjack_structs.rb	/^    def response_class$/;"	f	class:LJ_FFI.Command
+response_class	lib/labjack_structs.rb	/^    def response_class; ConfigU3Response; end$/;"	f	class:LJ_FFI.ConfigU3Command
+streamStart	lib/labjack.rb	/^  def streamStart$/;"	f	class:LJDevice
+streamStop	lib/labjack.rb	/^  def streamStop$/;"	f	class:LJDevice
+testLib	lib/labjack.rb	/^    def testLib$/;"	f	class:LJDevice
+to_hash	lib/labjack_structs.rb	/^  def to_hash$/;"	f	class:NiceFFI
+transmit_size	lib/labjack_structs.rb	/^    def transmit_size$/;"	f	class:LJ_FFI.Command

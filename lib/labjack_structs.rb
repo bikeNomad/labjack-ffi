@@ -18,12 +18,56 @@ module LJ_FFI
   extend NiceFFI::Library
   load_library('labjackusb')
 
+  def debug?
+    @debug ||= false
+  end
+
+  def debug=(val)
+    @debug = val
+  end
+
   class CommandHeader < NiceFFI::Struct
     pack(1)
+
     def initialize(*args)
       super(*args)
       order(:little)
     end
+  end
+
+  class Command < NiceFFI::Struct
+    include LJ_FFI
+
+    pack(1)
+
+    def transmit_size
+      self.size + (self.size.odd? ? 1 : 0)
+    end
+
+    def num_data_words
+      (self.transmit_size - header.size) >> 1
+    end
+
+    # subclass responsibility
+    def command_code
+      raise "no command code defined for #{self.class}"
+    end
+
+    # subclass responsibility
+    def response_class
+      raise "no response class defined for #{self.class}"
+    end
+
+    def receive_size
+      response_class.size + (response_class.size.odd? ? 1 : 0)
+    end
+
+    def initialize(*args)
+      super(*args)
+      order(:little)
+      self.clear
+    end
+
   end
 
   class NormalCommandHeader < CommandHeader
@@ -41,15 +85,7 @@ module LJ_FFI
   #   Bits 2-0: Number of data words.
   # 2-15 Data Words.
   # subclasses should have a NormalCommandHeader member called :header at offset 0.
-  class NormalCommand < NiceFFI::Struct
-    pack(1)
-
-    def initialize(*args)
-      super(*args)
-      order(:little)
-      self.clear
-    end
-
+  class NormalCommand < Command
     # 15 bytes max; sum is 15*255=3825 max
     # return value here is 256 maximum
     def cs8
@@ -60,7 +96,7 @@ module LJ_FFI
 
     # assumes all other fields are set up already
     def format(cmdNumber, isLocal=true)
-      header.commandByte = (isLocal ? 0 : 0x80) | (cmdNumber << 3) | (self.size - header.size)
+      header.commandByte = (isLocal ? 0 : 0x80) | (cmdNumber << 3) | self.num_data_words
       header.checksum8 = self.cs8
     end
   end
@@ -80,7 +116,7 @@ module LJ_FFI
   # Byte
   # 0 Checksum8: Includes bytes 1-5.
   # 1 Command Byte: D111_1WWW
-  #   Bit 7: Destination bit: 0 = Local, 1 = Remote.
+  #   Bit 7: Destination bit: 0 = Local, 1 = Remote. (ignored on U3)
   #   Bits 6-3: 1111 specifies that this is an extended Command.
   #   Bits 2-0: Used with some commands.
   # 2 Number of data words
@@ -88,14 +124,7 @@ module LJ_FFI
   # 4 Checksum16 (LSB)
   # 5 Checksum16 (MSB)
   # 6-255 Data words.
-  class ExtendedCommand < NiceFFI::Struct
-    pack(1)
-
-    def initialize(*args)
-      super(*args)
-      order(:little)
-      self.clear
-    end
+  class ExtendedCommand < Command
 
     # checksum8 of bytes 1-5 (header)
     def cs8 
@@ -112,18 +141,10 @@ module LJ_FFI
       a.reverse
     end
 
-    def command_code
-      raise "no command code defined for #{self.class}"
-    end
-
-    def response_class
-      raise "no response class defined for #{self.class}"
-    end
-
     # assumes all other fields are set up already
     def format(extraBits=0, isLocal=true)
-      header.commandByte = (isLocal ? 0 : 0x80) | (0x0F << 3) | (extraBits & 0x07)
-      header.numberOfDataWords = self.size - 6
+      header.commandByte = (isLocal ? 0 : 0x80) | 0x78 | (extraBits & 0x07)
+      header.numberOfDataWords = self.num_data_words
       header.commandNumber = self.command_code
       header.checksum16LSB = 0
       header.checksum16MSB = 0
@@ -133,25 +154,32 @@ module LJ_FFI
       header.checksum8 = self.cs8
     end
 
-    def do_command(handle, respbuf, extraBits=0, isLocal=false)
+    def do_command(handle, respbuf, extraBits=0, isLocal=true)
       self.format(extraBits, isLocal)
-puts "Sent: #{self.to_hash.inspect}"
-puts self.to_bytes.byteslice(0, self.size).hexdump
+      if debug?
+        $stderr.puts "Sent: #{self.transmit_size} #{self.to_hash.inspect}"
+        $stderr.puts self.to_bytes.byteslice(0, self.transmit_size).hexdump
+      end
       # send command
-      sent = LJ_FFI::ljusb_write(handle, self.to_ptr, self.size)
+      sent = LJ_FFI::ljusb_write(handle, self.to_ptr, self.transmit_size)
       raise "write failed" if sent != self.size
       # get response
       response = response_class.new(respbuf)
-      received = LJ_FFI::ljusb_read(handle, response.to_ptr, response.size)
+      received = LJ_FFI::ljusb_read(handle, response.to_ptr, self.receive_size)
       case received
+      when response.size
+        if debug?
+          $stderr.puts "Received: #{self.receive_size} #{response.to_hash.inspect}"
+          $stderr.puts response.to_bytes.byteslice(0, self.receive_size).hexdump
+        end
+        response
       when 0
         raise "read failed"
       when 2
         raise "bad checksum" if response.to_bytes == "\xB8\xB8"
       else
-        raise "unexpected response: #{response.to_bytes.inspect}" unless received == response.size
+        raise "error: #{received}"
       end
-      response
     end
   end
 
@@ -160,7 +188,7 @@ puts self.to_bytes.byteslice(0, self.size).hexdump
     layout(
       :origCmd, ExtendedCommandHeader,  # bytes 0-5
       :errorcode, :uint8,
-      :reserved, [ :uint8, 2],
+      :reserved, :uint16,
       :firmwareVersion, :uint16,
       :bootloaderVersion, :uint16,
       :hardwareVersion, :uint16,
@@ -211,7 +239,6 @@ puts self.to_bytes.byteslice(0, self.size).hexdump
       :compatibilityOptions, :uint8,
       :reserved, :uint16
     )
-
   end
 
 end

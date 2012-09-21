@@ -2,29 +2,24 @@
 
 require 'rubygems'
 require 'rake/clean'
+
+LIB="lib"
+SRC="src"
+
+CLEAN.include("#{SRC}/labjackusb.xml")
+
+task :test do
+#	sh "ruby -I#{LIB} #{LIB}/labjack.rb"
+end
+
 require 'hoe'
 
 Hoe.spec 'labjack' do |p|
   p.developer('Ned Konz', 'ned+ruby@bike-nomad.com')
   p.version = '0.1'
-  p.dependency('simplecov','0.6.4',:dev)
+#  p.dependency('simplecov','0.6.4',:dev)
 end
 
-LIB="lib"
-SRC="src"
-
-CLEAN.include("#{LIB}/labjack_ffi.rb","#{SRC}/labjackusb.xml")
-
-# ensure that generated Ruby is packaged too
-task :package => [ :generate ] do
-end
-
-task :test => [ :generate ] do
-	sh "ruby -I#{LIB} #{LIB}/labjack.rb"
-end
-
-task :generate => [ "#{LIB}/labjack_ffi.rb" ] do
-end
 
 file "#{LIB}/labjack_ffi.rb" => [ "#{SRC}/labjackusb.xml" ] do
 	sh "ffi-gen #{SRC}/labjackusb.xml #{LIB}/labjack_ffi.rb"
@@ -39,7 +34,7 @@ task :clean do
 end
 
 file "tags" do
-	sh "ctags -R #{LIB}"
+  sh "/usr/local/bin/ctags --ruby-kinds=cfmF --recurse=yes #{LIB}"
 end
 
 # vim: syntax=ruby

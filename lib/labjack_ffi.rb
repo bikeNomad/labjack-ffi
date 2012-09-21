@@ -38,8 +38,8 @@ module LJ_FFI
   attach_function :ljusb_get_dev_counts, :LJUSB_GetDevCounts, [ :pointer, :pointer, :uint ], :int
   attach_function :ljusb_open_all_devices, :LJUSB_OpenAllDevices, [ :pointer, :pointer, :uint ], :int
   attach_function :ljusb_open_device, :LJUSB_OpenDevice, [ :uint, :uint, :ulong ], :pointer
-  attach_function :ljusb_write, :LJUSB_Write, [ :pointer, :pointer, :ulong ], :ulong
-  attach_function :ljusb_read, :LJUSB_Read, [ :pointer, :pointer, :ulong ], :ulong
+  attach_function :ljusb_write, :LJUSB_Write, [ :pointer, :pointer, :ulong ], :long
+  attach_function :ljusb_read, :LJUSB_Read, [ :pointer, :pointer, :ulong ], :long
   attach_function :ljusb_stream, :LJUSB_Stream, [ :pointer, :pointer, :ulong ], :ulong
   attach_function :ljusb_close_device, :LJUSB_CloseDevice, [ :pointer ], :void
   attach_function :ljusb_is_handle_valid, :LJUSB_IsHandleValid, [ :pointer ], :bool

@@ -7,7 +7,7 @@ class LJDevice
   def configU3
     cmd = ConfigU3Command.new(@command)
     cmd.writeMask = 0
-    resp = cmd.do_command(@handle, @response)
+    cmd.do_command(@handle, @response, 0, false)
   end
 
   def streamStart
@@ -20,6 +20,7 @@ class LJDevice
 
   class << self
     include LJ_FFI
+
     def testLib
       puts "Library version: #{'%.2f' % ljusb_get_library_version}"
       puts "U3 count: #{ljusb_get_dev_count U3_PRODUCT_ID}, " + 
@@ -27,16 +28,54 @@ class LJDevice
         "U12 count: #{ljusb_get_dev_count U12_PRODUCT_ID}, " +
         "UE9 count: #{ljusb_get_dev_count UE9_PRODUCT_ID}"
     end
+
+    def devices
+      @devices ||= []
+    end
+
+    def add_device(dev)
+      devices << dev
+      $stderr.puts("adding #{dev}") if debug?
+    end
+
+    def remove_device(dev)
+      devices.delete(dev)
+    end
+
+    def close_all
+      devices.each do |d|
+        $stderr.puts("closing #{d}") if debug?
+        d.release
+      end
+      @devices = []
+    end
   end
 
   def initialize(devnum, prod_id)
     @handle = ljusb_open_device(devnum, 0, prod_id)
+    raise "open failed" unless @handle
+    self.class.add_device(self)
     @command = FFI::MemoryPointer.new(256)
     @response = FFI::MemoryPointer.new(256)
     @streaming = false
   end
 
+  def release
+    if @handle
+      ljusb_close_device(@handle)
+      @handle = nil
+    end
+    @command = @response = nil
+  end
+
+  def debug?
+    self.class.debug?
+  end
 end
+
+
+END { LJDevice::close_all }
+
 
 # ConfigU3          ext 26  38
 # ConfigIO          ext 12  12
@@ -62,8 +101,12 @@ end
 
 # test if run from command line
 if __FILE__ == $0
+  include LJ_FFI
+  LJ_FFI::debug=true
   LJDevice.testLib
-  lj = LJDevice.new(1, LJ_FFI::U3_PRODUCT_ID)
-  puts "\nconfigU3:"
-  puts lj.configU3
+  if ljusb_get_dev_count(U3_PRODUCT_ID) > 0
+    lj = LJDevice.new(1, U3_PRODUCT_ID)
+    puts "\nconfigU3:"
+    p lj.configU3
+  end
 end
