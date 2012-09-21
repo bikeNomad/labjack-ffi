@@ -18,12 +18,18 @@ NiceFFI	lib/labjack_structs.rb	/^class NiceFFI::Struct$/;"	c
 NormalCommand	lib/labjack_structs.rb	/^  class NormalCommand < Command$/;"	c	class:LJ_FFI
 NormalCommandHeader	lib/labjack_structs.rb	/^  class NormalCommandHeader < CommandHeader$/;"	c	class:LJ_FFI
 String	lib/labjack_structs.rb	/^class String$/;"	c
+add_device	lib/labjack.rb	/^    def add_device(dev)$/;"	f	class:LJDevice
+close_all	lib/labjack.rb	/^    def close_all$/;"	f	class:LJDevice
 command_code	lib/labjack_structs.rb	/^    def command_code$/;"	f	class:LJ_FFI.Command
 command_code	lib/labjack_structs.rb	/^    def command_code; 8; end$/;"	f	class:LJ_FFI.ConfigU3Command
 configU3	lib/labjack.rb	/^  def configU3$/;"	f	class:LJDevice
 cs16	lib/labjack_structs.rb	/^    def cs16$/;"	f	class:LJ_FFI.ExtendedCommand
 cs8	lib/labjack_structs.rb	/^    def cs8 $/;"	f	class:LJ_FFI.ExtendedCommand
 cs8	lib/labjack_structs.rb	/^    def cs8$/;"	f	class:LJ_FFI.NormalCommand
+debug=	lib/labjack_structs.rb	/^  def debug=(val)$/;"	f	class:LJ_FFI
+debug?	lib/labjack.rb	/^  def debug?$/;"	f
+debug?	lib/labjack_structs.rb	/^  def debug?$/;"	f	class:LJ_FFI
+devices	lib/labjack.rb	/^    def devices$/;"	f	class:LJDevice
 do_command	lib/labjack_structs.rb	/^    def do_command(handle, respbuf, extraBits=0, isLocal=true)$/;"	f	class:LJ_FFI.ExtendedCommand
 format	lib/labjack_structs.rb	/^    def format(cmdNumber, isLocal=true)$/;"	f	class:LJ_FFI.NormalCommand
 format	lib/labjack_structs.rb	/^    def format(extraBits=0, isLocal=true)$/;"	f	class:LJ_FFI.ExtendedCommand
@@ -33,6 +39,8 @@ initialize	lib/labjack_structs.rb	/^    def initialize(*args)$/;"	f	class:LJ_FFI
 initialize	lib/labjack_structs.rb	/^    def initialize(*args)$/;"	f	class:LJ_FFI.CommandHeader
 num_data_words	lib/labjack_structs.rb	/^    def num_data_words$/;"	f	class:LJ_FFI.Command
 receive_size	lib/labjack_structs.rb	/^    def receive_size$/;"	f	class:LJ_FFI.Command
+release	lib/labjack.rb	/^  def release$/;"	f
+remove_device	lib/labjack.rb	/^    def remove_device(dev)$/;"	f	class:LJDevice
 response_class	lib/labjack_structs.rb	/^    def response_class$/;"	f	class:LJ_FFI.Command
 response_class	lib/labjack_structs.rb	/^    def response_class; ConfigU3Response; end$/;"	f	class:LJ_FFI.ConfigU3Command
 streamStart	lib/labjack.rb	/^  def streamStart$/;"	f	class:LJDevice

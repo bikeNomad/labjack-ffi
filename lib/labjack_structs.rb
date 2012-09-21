@@ -18,14 +18,6 @@ module LJ_FFI
   extend NiceFFI::Library
   load_library('labjackusb')
 
-  def debug?
-    @debug ||= false
-  end
-
-  def debug=(val)
-    @debug = val
-  end
-
   class CommandHeader < NiceFFI::Struct
     pack(1)
 
@@ -156,7 +148,7 @@ module LJ_FFI
 
     def do_command(handle, respbuf, extraBits=0, isLocal=true)
       self.format(extraBits, isLocal)
-      if debug?
+      if LJDevice::debug?
         $stderr.puts "Sent: #{self.transmit_size} #{self.to_hash.inspect}"
         $stderr.puts self.to_bytes.slice(0, self.transmit_size).hexdump
       end
@@ -168,7 +160,7 @@ module LJ_FFI
       received = LJ_FFI::ljusb_read(handle, response.to_ptr, self.receive_size)
       case received
       when response.size
-        if debug?
+        if LJDevice::debug?
           $stderr.puts "Received: #{self.receive_size} #{response.to_hash.inspect}"
           $stderr.puts response.to_bytes.slice(0, self.receive_size).hexdump
         end

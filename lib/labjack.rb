@@ -49,6 +49,14 @@ class LJDevice
       end
       @devices = []
     end
+
+    def debug?
+      @debug ||= false
+    end
+
+    def debug=(f)
+      @debug = f
+    end
   end
 
   def initialize(devnum, prod_id)
@@ -102,7 +110,7 @@ END { LJDevice::close_all }
 # test if run from command line
 if __FILE__ == $0
   include LJ_FFI
-  LJ_FFI::debug=true
+  LJDevice::debug=true
   LJDevice.testLib
   if ljusb_get_dev_count(U3_PRODUCT_ID) > 0
     lj = LJDevice.new(1, U3_PRODUCT_ID)
