@@ -55,9 +55,8 @@ module LJ_FFI
     end
 
     def initialize(*args)
-      super(*args)
+      super
       order(:little)
-      self.clear
     end
 
   end
@@ -149,8 +148,8 @@ module LJ_FFI
     def do_command(handle, respbuf, extraBits=0, isLocal=true)
       self.format(extraBits, isLocal)
       if LJDevice::debug?
-        $stderr.puts "Sent: #{self.transmit_size} #{self.to_hash.inspect}"
-        $stderr.puts self.to_bytes.slice(0, self.transmit_size).hexdump
+        $stderr.puts "Sent(#{self.transmit_size}) #{self.to_bytes.slice(0, self.transmit_size).hexdump}"
+        $stderr.puts self.to_hash.inspect
       end
       # send command
       sent = LJ_FFI::ljusb_write(handle, self.to_ptr, self.transmit_size)
@@ -160,11 +159,13 @@ module LJ_FFI
       received = LJ_FFI::ljusb_read(handle, response.to_ptr, self.receive_size)
       case received
       when response.size
+        resp = response.to_hash
         if LJDevice::debug?
-          $stderr.puts "Received: #{self.receive_size} #{response.to_hash.inspect}"
-          $stderr.puts response.to_bytes.slice(0, self.receive_size).hexdump
+          $stderr.puts "Received(#{self.receive_size}): #{response.to_bytes.slice(0, self.receive_size).hexdump}"
+          $stderr.puts resp.inspect
         end
-        response
+        resp.delete(:header)
+        resp
       when 0
         raise "read failed"
       when 2
@@ -178,7 +179,7 @@ module LJ_FFI
   class ConfigU3Response < NiceFFI::Struct
     pack(1)
     layout(
-      :origCmd, ExtendedCommandHeader,  # bytes 0-5
+      :header, ExtendedCommandHeader,  # bytes 0-5
       :errorcode, :uint8,
       :reserved, :uint16,
       :firmwareVersion, :uint16,
@@ -230,6 +231,33 @@ module LJ_FFI
       :timerClockDivisor, :uint8,
       :compatibilityOptions, :uint8,
       :reserved, :uint16
+    )
+  end
+
+  class ConfigIOResponse < NiceFFI::Struct
+    pack(1)
+    layout(
+      :header, ExtendedCommandHeader,
+      :errorcode, :uint8,
+      :reserved, :uint8,
+      :timerCounterConfig, :uint8,
+      :dac1Enable, :uint8,
+      :fioAnalog, :uint8,
+      :eioAnalog, :uint8
+    )
+  end
+
+  class ConfigIOCommand < ExtendedCommand
+    def command_code; 11; end
+    def response_class; ConfigIOResponse; end
+    layout(
+      :header, ExtendedCommandHeader,
+      :writeMask, :uint16,
+      :reserved, :uint8,
+      :timerCounterConfig, :uint8,
+      :dac1Enable, :uint8,    # ignored on HW 1.30+
+      :fioAnalog, :uint8,
+      :eioAnalog, :uint8
     )
   end
 

@@ -4,10 +4,17 @@ require 'labjack_structs'
 class LJDevice
   include LJ_FFI
 
-  def configU3
-    cmd = ConfigU3Command.new(@command)
-    cmd.writeMask = 0
-    cmd.do_command(@handle, @response, 0, false)
+  def configU3(opts={})
+    cmd = ConfigU3Command.new(@command, opts)
+    resp = cmd.do_command(@handle, @response, 0, false)
+    resp[:firmwareVersion] = resp[:firmwareVersion].divmod(256)
+    resp[:hardwareVersion] = resp[:hardwareVersion].divmod(256)
+    resp
+  end
+
+  def configIO(opts={})
+    cmd = ConfigIOCommand.new(@command, opts)
+    resp = cmd.do_command(@handle, @response, 0, false)
   end
 
   def streamStart
@@ -116,5 +123,7 @@ if __FILE__ == $0
     lj = LJDevice.new(1, U3_PRODUCT_ID)
     puts "\nconfigU3:"
     p lj.configU3
+    puts "\nconfigIO:"
+    p lj.configIO
   end
 end
