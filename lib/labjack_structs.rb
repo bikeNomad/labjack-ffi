@@ -89,7 +89,7 @@ module LJ_FFI
     # 15 bytes max; sum is 15*255=3825 max
     # return value here is 256 maximum
     def cs8
-      s = self.to_bytes.byteslice(1, self.size-1).sum
+      s = self.to_bytes.slice(1, self.size-1).sum
       a = s.divmod(256)
       a[0] + a[1]
     end
@@ -128,7 +128,7 @@ module LJ_FFI
 
     # checksum8 of bytes 1-5 (header)
     def cs8 
-      s = self.to_bytes.byteslice(1, 5).sum
+      s = self.to_bytes.slice(1, 5).sum
       a = s.divmod(256)
       a[0] + a[1]
     end
@@ -136,7 +136,7 @@ module LJ_FFI
     # 250 bytes max; sum is 250*255=63750 max
     # returns [lsb, msb]
     def cs16
-      s = self.to_bytes.byteslice(6, self.size-6).sum
+      s = self.to_bytes.slice(6, self.size-6).sum
       a = s.divmod(256)
       a.reverse
     end
@@ -158,7 +158,7 @@ module LJ_FFI
       self.format(extraBits, isLocal)
       if debug?
         $stderr.puts "Sent: #{self.transmit_size} #{self.to_hash.inspect}"
-        $stderr.puts self.to_bytes.byteslice(0, self.transmit_size).hexdump
+        $stderr.puts self.to_bytes.slice(0, self.transmit_size).hexdump
       end
       # send command
       sent = LJ_FFI::ljusb_write(handle, self.to_ptr, self.transmit_size)
@@ -170,7 +170,7 @@ module LJ_FFI
       when response.size
         if debug?
           $stderr.puts "Received: #{self.receive_size} #{response.to_hash.inspect}"
-          $stderr.puts response.to_bytes.byteslice(0, self.receive_size).hexdump
+          $stderr.puts response.to_bytes.slice(0, self.receive_size).hexdump
         end
         response
       when 0
