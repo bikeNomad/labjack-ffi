@@ -1,4 +1,3 @@
-
 require 'rubygems'
 require 'ffi'
 require 'nice-ffi'
