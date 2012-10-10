@@ -1,6 +1,8 @@
+# master include file for labjack-ruby
 require 'labjack_ffi'
 require 'commands'
 require 'lj_device'
+require 'errors'
 
 # test if run from command line
 if __FILE__ == $0

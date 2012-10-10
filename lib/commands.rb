@@ -1,10 +1,24 @@
 require 'labjack_ffi'
 require 'command_base'
 
-# ConfigU3          ext 26  38
-# ConfigIO          ext 12  12
+# ✓ ConfigU3          ext 26  38
+# ✓ ConfigIO          ext 12  12
 # ConfigTimerClock  ext 10  10
 # Feedback          ext 64  64
+#   AIN
+#   WaitShort
+#   WaitLong
+#   LED
+#   BitStateRead
+#   BitStateWrite
+#   BitDirRead
+#   BitDirWrite
+#   PortStateRead
+#   PortStateWrite
+#   PortDirRead
+#   PortDirWrite
+#   DAC#8bit
+#   DAC#16bit
 # ReadMem           ext  8  40
 # WriteMem          ext 40   8
 # EraseMem          ext  8   8
@@ -108,6 +122,26 @@ module LJ_FFI
       :fioAnalog, :uint8,
       :eioAnalog, :uint8
     )
+  end
+
+  class AnalogInputResponse < FeedbackResponse
+    pack(1)
+    layout(
+      *FeedbackResponse.layout_template,
+      :ain, :uint16 # little-endian
+    )
+  end
+
+  class AnalogInputCommand < FeedbackCommand
+    pack(1)
+    layout(
+      *FeedbackCommand.layout_template,
+      :iotype, :uint8,
+      :poschan_longsettling_quicksample, :uint8,
+      :negchan, :uint8  # 0-15 for AIN0-AIN15, 30 for Vref, 31 single-ended
+    )
+    def command_code; 1; end
+    def response_class; AnalogInputResponse; end
   end
 
 end

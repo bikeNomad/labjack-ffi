@@ -176,4 +176,26 @@ module LJ_FFI
     end
   end
 
+  class FeedbackResponse < NiceFFI::Struct
+    pack(1)
+    # this is a template for derived classes
+    def self.layout_template
+      [ :header, ExtendedCommandHeader,  # bytes 0-5
+      :errorcode, :uint8,
+      :errorframe, :uint8,
+      :echo, :uint8 ]
+    end
+  end
+
+  class FeedbackCommand < ExtendedCommand
+    def command_code; 0; end
+    def response_class; FeedbackResponse; end
+    pack(1)
+    # this is a template for derived classes
+    def self.layout_template
+      [ :header, ExtendedCommandHeader,
+      :echo, :uint8 ]
+    end
+  end
+
 end
