@@ -22,7 +22,7 @@ module LJ_FFI
     pack(1)
 
     def initialize(*args)
-      super(*args)
+      super
       order(:little)
     end
   end
@@ -161,7 +161,7 @@ module LJ_FFI
       when response.size
         resp = response.to_hash
         if LJDevice::debug?
-          $stderr.puts "Received(#{self.receive_size}): #{response.to_bytes.slice(0, self.receive_size).hexdump}"
+          $stderr.puts "Received(#{self.receive_size}) #{response.to_bytes.slice(0, self.receive_size).hexdump}"
           $stderr.puts resp.inspect
         end
         resp.delete(:header)
@@ -173,6 +173,10 @@ module LJ_FFI
       else
         raise "error: #{received}"
       end
+    end
+
+    def inspect
+      self.to_hash.inspect
     end
   end
 

@@ -5,6 +5,16 @@ require 'commands'
 class LJDevice
   include LJ_FFI
 
+  def analogInput(posChan = AIN_POS_V_REG, negChan = AIN_NEG_SINGLE_ENDED, opts={})
+    cmd = AnalogInputCommand.new(@command, opts)
+    cmd.long_settling = opts[:long_settling]
+    cmd.quick_sample = opts[:quick_sample]
+    cmd.pos_channel = posChan
+    cmd.neg_channel = negChan
+    resp = cmd.do_command(@handle, @response, 0, false)
+    resp
+  end
+
   def configU3(opts={})
     cmd = ConfigU3Command.new(@command, opts)
     resp = cmd.do_command(@handle, @response, 0, false)
@@ -16,6 +26,7 @@ class LJDevice
   def configIO(opts={})
     cmd = ConfigIOCommand.new(@command, opts)
     resp = cmd.do_command(@handle, @response, 0, false)
+    resp
   end
 
   def streamStart

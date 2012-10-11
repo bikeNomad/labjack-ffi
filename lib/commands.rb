@@ -138,10 +138,37 @@ module LJ_FFI
       *FeedbackCommand.layout_template,
       :iotype, :uint8,
       :poschan_longsettling_quicksample, :uint8,
-      :negchan, :uint8  # 0-15 for AIN0-AIN15, 30 for Vref, 31 single-ended
+      :negchan, :uint8  
     )
-    def command_code; 1; end
     def response_class; AnalogInputResponse; end
+
+    def initialize(*args)
+      super
+      p self
+      self[:iotype] = 1
+      p self
+    end
+
+    # 0-15 for AIN0-AIN15, 30 for temp sensor, 31 Vreg
+    def pos_channel=(num)
+      self[:poschan_longsettling_quicksample] &= ~0x1F
+      self[:poschan_longsettling_quicksample] |= (num & 0x1F)
+    end
+
+    # 0-15 for AIN0-AIN15, 30 for Vref, 31 single-ended
+    def neg_channel=(num)
+      self[:negchan] = num
+    end
+
+    def long_settling=(bool)
+      self[:poschan_longsettling_quicksample] &= ~(1<<6)
+      self[:poschan_longsettling_quicksample] |= (1<<6) if bool
+    end
+
+    def quick_sample=(bool)
+     self[:poschan_longsettling_quicksample] &= ~(1<<7)
+     self[:poschan_longsettling_quicksample] |= (1<<7) if bool
+    end
   end
 
 end

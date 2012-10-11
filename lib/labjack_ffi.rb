@@ -46,4 +46,9 @@ module LJ_FFI
   attach_function :ljusb_bulk_read, :LJUSB_BulkRead, [ :pointer, :uchar, :pointer, :ulong ], :ulong
   attach_function :ljusb_bulk_write, :LJUSB_BulkWrite, [ :pointer, :uchar, :pointer, :ulong ], :ulong
 
+  AIN_POS_TEMP_SENSOR = 30
+  AIN_POS_V_REG = 31
+  AIN_NEG_V_REF = 30
+  AIN_NEG_SINGLE_ENDED = 31
+
 end
