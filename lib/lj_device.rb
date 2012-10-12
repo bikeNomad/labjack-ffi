@@ -12,7 +12,7 @@ class LJDevice
     cmd.pos_channel = posChan
     cmd.neg_channel = negChan
     resp = cmd.do_command(@handle, @response, 0, false)
-    resp
+    resp[:ain]
   end
 
   def configU3(opts={})

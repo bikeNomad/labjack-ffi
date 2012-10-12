@@ -10,7 +10,7 @@ class Test::LabjackRuby < MiniTest::Unit::TestCase
   include LJ_FFI
 
   def setup
-    LJDevice::debug=true
+    LJDevice::debug=false
     assert(ljusb_get_dev_count(U3_PRODUCT_ID) > 0, "no U3 devices detected!")
     @lj = LJDevice.new(1, U3_PRODUCT_ID)
   end
@@ -34,7 +34,8 @@ class Test::LabjackRuby < MiniTest::Unit::TestCase
 
   def test_analogInput
     puts "===test_analogInput"
-    cain = @lj.analogInput(AIN_POS_TEMP_SENSOR)
-    p cain
+    cio = @lj.configIO(:fioAnalog => 15)
+    ain = @lj.analogInput(AIN_POS_V_REG, AIN_NEG_SINGLE_ENDED)
+    assert_in_epsilon()
   end
 end

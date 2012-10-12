@@ -128,7 +128,8 @@ module LJ_FFI
     pack(1)
     layout(
       *FeedbackResponse.layout_template,
-      :ain, :uint16 # little-endian
+      :ain, :uint16, # little-endian
+      :pad1, :uint8
     )
   end
 
@@ -138,15 +139,13 @@ module LJ_FFI
       *FeedbackCommand.layout_template,
       :iotype, :uint8,
       :poschan_longsettling_quicksample, :uint8,
-      :negchan, :uint8  
+      :negchan, :uint8
     )
     def response_class; AnalogInputResponse; end
 
     def initialize(*args)
       super
-      p self
       self[:iotype] = 1
-      p self
     end
 
     # 0-15 for AIN0-AIN15, 30 for temp sensor, 31 Vreg

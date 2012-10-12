@@ -171,7 +171,7 @@ module LJ_FFI
       when 2
         raise "bad checksum" if response.to_bytes == "\xB8\xB8"
       else
-        raise "error: #{received}"
+        raise "error: received #{received} bytes but expected #{response.size}"
       end
     end
 
